@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,14 +9,14 @@ namespace PromoCodeFactory.DataAccess.Repositories
 {
     public class InMemoryRepository<T>: IRepository<T> where T: BaseEntity
     {
-        protected IList<T> Data { get; set; }
+        protected List<T> Data { get; set; }
 
-        public InMemoryRepository(IList<T> data)
+        public InMemoryRepository(List<T> data)
         {
             Data = data;
         }
 
-        public Task<IList<T>> GetAllAsync()
+        public Task<List<T>> GetAllAsync()
         {
             return Task.FromResult(Data);
         }
