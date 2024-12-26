@@ -26,7 +26,7 @@ namespace PromoCodeFactory.DataAccess.Repositories
             return Task.FromResult(Data.FirstOrDefault(x => x.Id == id));
         }
 
-        public void Create(T entity)
+        public void Add(T entity)
         {
             Data.Add(entity); 
         }
@@ -37,9 +37,9 @@ namespace PromoCodeFactory.DataAccess.Repositories
             Data.Add(entity);
         }
 
-        public void Delete(Guid id)
+        public bool Delete(Guid id)
         {
-            Data.Remove(Data.FirstOrDefault(x => x.Id == id));
+            return Data.Remove(Data.FirstOrDefault(x => x.Id == id));
         }
     }
 }

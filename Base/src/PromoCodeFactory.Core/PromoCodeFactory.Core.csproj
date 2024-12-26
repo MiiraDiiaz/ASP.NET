@@ -4,4 +4,8 @@
         <TargetFramework>net7</TargetFramework>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Compile Include="..\PromoCodeFactory.WebHost\Models\EmployeeShortResponse.cs" Link="EmployeeShortResponse.cs" />
+    </ItemGroup>
+
 </Project>

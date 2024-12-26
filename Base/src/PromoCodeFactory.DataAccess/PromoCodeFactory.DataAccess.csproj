@@ -5,6 +5,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Include="..\PromoCodeFactory.WebHost\Models\EmployeeShortResponse.cs" Link="EmployeeShortResponse.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\PromoCodeFactory.Core\PromoCodeFactory.Core.csproj" />
     </ItemGroup>
 

@@ -31,9 +31,11 @@ namespace PromoCodeFactory.WebHost.Controllers
         /// <summary>
         /// Получить данные всех сотрудников
         /// </summary>
-        /// <returns></returns>
+        /// <response code="200">Запрос выполнен успешно</response>
+        /// <returns>Список сотрудников</returns>
         [HttpGet]
-        public async Task<List<EmployeeShortResponse>> GetEmployeesAsync()
+        [ProducesResponseType(typeof(List<EmployeeResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<EmployeeResponse>> GetEmployeesAsync()
         {
             var employees = await _employeeRepository.GetAllAsync();
 
@@ -45,14 +47,19 @@ namespace PromoCodeFactory.WebHost.Controllers
                     FullName = x.FullName,
                 }).ToList();
 
-            return employeesModelList;
+            return Ok(employeesModelList);
         }
 
         /// <summary>
         /// Получить данные сотрудника по Id
         /// </summary>
-        /// <returns></returns>
+        /// <param name="id">Идентификатор сотрудника</param>
+        /// <response code="200">Запрос выполнен успешно</response>
+        /// <response code="404">Сотрудник с таким id не найден</response>
+        /// <returns>Сотрудник</returns>
         [HttpGet("{id:guid}")]
+        [ProducesResponseType(typeof(EmployeeResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<EmployeeResponse>> GetEmployeeByIdAsync(Guid id)
         {
             var employee = await _employeeRepository.GetByIdAsync(id);
@@ -73,103 +80,94 @@ namespace PromoCodeFactory.WebHost.Controllers
                 AppliedPromocodesCount = employee.AppliedPromocodesCount
             };
 
-            return employeeModel;
+            return Ok(employeeModel);
         }
+
         /// <summary>
         /// Добавить нового сотрудника
         /// </summary>
-        /// <param name="firstName"> Имя</param>
-        /// <param name="lastName">Фамилия</param>
-        /// <param name="email">Почта</param>
-        /// <param name="promocod">Промокод</param>
-        [HttpPut("{firstName}/{lastName}/{email}/{promocod}")]
-        public ActionResult<EmployeeResponse> UpdateEmployee(string firstName, string lastName, string email, int promocod)
+        /// <param name="employee">Модель сотрудника</param>
+        /// <response code="201">Сотрудник успешно создан</response>
+        /// <response code="400">Данные запроса невалидны</response>
+        /// <returns>Созданный сотрудник</returns>
+        [HttpPut]
+        [ProducesResponseType(typeof(Employee), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public ActionResult<EmployeeResponse> CreateEmployee(Employee employee)
         {
-            try
+
+            var newEmployee = new Employee()
             {
-                var newEmployee = new Employee()
-                {
-                    Id = Guid.Parse("b86f2096-237a-4059-8329-1bbcea72769b"),
-                    FirstName = firstName,
-                    LastName = lastName,
-                    Email = email,
-                    Roles = new List<Role>()
+                Id = Guid.Parse("b86f2096-237a-4059-8329-1bbcea72769b"),
+                FirstName = employee.FirstName,
+                LastName = employee.LastName,
+                Email = employee.Email,
+                Roles = new List<Role>()
                     {
                         FakeDataFactory.Roles.FirstOrDefault(x => x.Name == "PartnerManager")
                     },
-                    AppliedPromocodesCount = promocod
-                };
-                _employeeRepository.Create(newEmployee);
-                return Ok(newEmployee.Id);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"{ex.Message}");
-            }
-            
+                AppliedPromocodesCount = employee.AppliedPromocodesCount
+            };
+            _employeeRepository.Add(newEmployee);
+            return CreatedAtAction(nameof(CreateEmployee), newEmployee);
         }
+
         /// <summary>
         /// Изменить сотрудника
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="firstName"></param>
-        /// <param name="lastName"></param>
-        /// <param name="email"></param>
-        /// <param name="promocod"></param>
-        /// <returns></returns>
-        [HttpPost("{id}/{firstName}/{lastName}/{email}/{promocod}")]
-        public async Task<ActionResult<EmployeeResponse>> UpdateEmployee(Guid id, string firstName, string lastName, string email, int promocod)
+        /// <param name="id">Идентификатор сотрудника</param>
+        /// <param name="employee">Модель сотрудника</param>
+        /// <response code="200">Запрос выполнен успешно</response>
+        /// <response code="400">Данные запроса невалидны</response>
+        /// <response code="404">Сотрудник не найден</response>
+        /// <returns>Данные сотрудника изменены</returns>
+        [HttpPost("{id:guid}")]
+        [ProducesResponseType(typeof(EmployeeResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<EmployeeResponse>> UpdateEmployee(Guid id, Employee employee)
         {
-            try
+
+            var foundEmployee = await _employeeRepository.GetByIdAsync(id);
+
+            if (foundEmployee == null)
+                return NotFound();
+
+            var updateEmployee = new Employee()
             {
-                var employee = await _employeeRepository.GetByIdAsync(id);
-
-                if (employee == null)
-                    return NotFound();
-
-                var updateEmployee = new Employee()
-                {
-                    Id = id,
-                    FirstName = firstName,
-                    LastName = lastName,
-                    Email = email,
-                    Roles = new List<Role>()
+                Id = id,
+                FirstName = employee.FirstName,
+                LastName = employee.LastName,
+                Email = employee.Email,
+                Roles = new List<Role>()
                     {
                         FakeDataFactory.Roles.FirstOrDefault(x => x.Name == "PartnerManager")
                     },
-                    AppliedPromocodesCount = promocod
-                };
-                _employeeRepository.Update(id, updateEmployee);
-                return Ok($"Сотрудник {employee.FullName} успешно изменен");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"{ex.Message}");
-            }
+                AppliedPromocodesCount = employee.AppliedPromocodesCount
+            };
+            _employeeRepository.Update(id, updateEmployee);
+            return Ok(updateEmployee);
         }
-    
+
         /// <summary>
         /// Удаление сотрудника
         /// </summary>
         /// <param name="id"> ID</param>
-        /// <returns></returns>
+        /// <response code="204">Запрос выполнен успешно</response>
+        /// <response code="400">Данные запроса невалидны</response>
+        /// <response code="404">Сотрудник не найден</response>
         [HttpDelete("{id:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<EmployeeResponse>> DeleteEmployee(Guid id)
         {
-            try
-            {
-                var employee = await _employeeRepository.GetByIdAsync(id);
+            var employee = await _employeeRepository.GetByIdAsync(id);
 
-                if (employee == null)
-                    return NotFound();
+            if (employee == null)
+                return NotFound();
 
-                _employeeRepository.Delete(id);
-                return Ok($"Сотрудник {employee.FullName} успешно удален");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"{ex.Message}");
-            }
+            if (_employeeRepository.Delete(id)) return NoContent();
+            return NotFound();
         }
     }
 }
